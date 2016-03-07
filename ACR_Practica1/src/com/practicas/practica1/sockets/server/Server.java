@@ -41,7 +41,8 @@ public class Server extends javax.swing.JFrame {
 
         jPanel1 = new javax.swing.JPanel();
         jLabel1 = new javax.swing.JLabel();
-        jScrollPane2 = new javax.swing.JScrollPane();
+        jButton1 = new javax.swing.JButton();
+        jScrollPane1 = new javax.swing.JScrollPane();
         console = new javax.swing.JTextArea();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
@@ -60,12 +61,19 @@ public class Server extends javax.swing.JFrame {
         org.jdesktop.beansbinding.Binding binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, this, org.jdesktop.beansbinding.ELProperty.create("${defaultCloseOperation}"), this, org.jdesktop.beansbinding.BeanProperty.create("defaultCloseOperation"));
         bindingGroup.addBinding(binding);
 
-        jLabel1.setText("Console:");
+        jLabel1.setText("Consola:");
+
+        jButton1.setText("Iniciar Server");
+        jButton1.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                jButton1MouseClicked(evt);
+            }
+        });
 
         console.setEditable(false);
         console.setColumns(20);
         console.setRows(5);
-        jScrollPane2.setViewportView(console);
+        jScrollPane1.setViewportView(console);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
@@ -74,25 +82,29 @@ public class Server extends javax.swing.JFrame {
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 776, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 776, Short.MAX_VALUE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addComponent(jLabel1)
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel1)
+                            .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addContainerGap(442, Short.MAX_VALUE)
+                .addContainerGap(395, Short.MAX_VALUE)
+                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
 
         jMenu1.setText("Archivo");
 
-        jMenuItem1.setText("Enviar");
+        jMenuItem1.setText("Salir");
         jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItem1ActionPerformed(evt);
@@ -121,7 +133,25 @@ public class Server extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
+        System.exit(0);
     }//GEN-LAST:event_jMenuItem1ActionPerformed
+
+    private void jButton1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jButton1MouseClicked
+        Thread thread = new Thread() {
+            @Override
+            public void run() {
+                SocketWrapperServer sws = new SocketWrapperServer();
+
+                try {
+                    sws.recibir();
+                }
+                catch (IOException ex) {
+                    Logger.getLogger(Server.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+        };
+        thread.start();
+    }//GEN-LAST:event_jButton1MouseClicked
 
     /**
      * @param args the command line arguments
@@ -132,7 +162,11 @@ public class Server extends javax.swing.JFrame {
         //</editor-fold>
         //</editor-fold>
         //</editor-fold>
-
+        /* Set the Nimbus look and feel */
+        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
+        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
+         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
+         */
         try {
             for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
                 if ("Windows".equals(info.getName())) {
@@ -147,74 +181,72 @@ public class Server extends javax.swing.JFrame {
         java.awt.EventQueue.invokeLater(() -> {
             new Server().setVisible(true);
         });
-        int a;
 
-        while (true) {
-            SocketWrapperServer sws = new SocketWrapperServer();
-            sws.recibir();
-
-        }
     }
 
-    public static class SocketWrapperServer {
+    public class SocketWrapperServer {
 
-        private void recibir() throws IOException {
+        private boolean recibir() throws IOException {
+            console.append("[INICIO] Recepción de Archivos ===============\n");
             ServerSocket servidor;
             servidor = new ServerSocket(8080);
 
-            // Creamos el socket que atendera el servidor
-            Socket socket = servidor.accept();
+            System.out.println("[INICIO] Recepción de Archivos ===============");
 
-            DataInputStream dis = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+            // Creamos el socket que atenderá el servidor
+            try (Socket socket = servidor.accept(); DataInputStream dis = new DataInputStream(new BufferedInputStream(socket.getInputStream()))) {
 
-            //read the number of files from the client
-            int totalFiles = dis.readInt();
-            System.out.println("Number of Files to be received: " + totalFiles);
+                // Leemos la cantidad de archivos a recibír
+                int totalFiles = dis.readInt();
+                console.append("Total de archivos: " + totalFiles + "\n");
 
-            int n = 0;
+                int n = 0;
 
-            //outer loop, executes one for each file
-            for (int i = 0; i < totalFiles; i++) {
-                //create a new fileoutputstream for each new file
-                String filename = dis.readUTF();
-                long fileSize = dis.readLong();
+                //outer loop, executes one for each file
+                for (int i = 0; i < totalFiles; i++) {
+                    //create a new fileoutputstream for each new file
+                    String filename = dis.readUTF();
+                    long fileSize = dis.readLong();
 
-                byte[] buf = new byte[4092];
+                    byte[] buf = new byte[4092];
 
-                System.out.println("Nombre: " + filename);
-                System.out.println("Peso:   " + fileSize);
+                    console.append("Nombre: " + filename + "\n");
+                    console.append("Peso:   " + fileSize + "\n");
 
-                //read file
-                File file = new File("C:\\Users\\eddy_\\Downloads\\" + filename);
+                    //read file
+                    File file = new File("C:\\Users\\eddy_\\Downloads\\" + filename);
 
-                try (FileOutputStream fos = new FileOutputStream(file)) {
-                    while (fileSize > 0 && (n = dis.read(buf, 0, (int) Math.min(buf.length, fileSize))) != -1) {
-                        fos.write(buf, 0, n);
-                        fileSize -= n;
-                        fos.flush();
+                    try (FileOutputStream fos = new FileOutputStream(file)) {
+                        while (fileSize > 0 && (n = dis.read(buf, 0, (int) Math.min(buf.length, fileSize))) != -1) {
+                            fos.write(buf, 0, n);
+                            fileSize -= n;
+                            fos.flush();
+                        }
                     }
+
+                    console.append("\n");
+                }
+
+                console.append("[FIN] Recepción de Archivos ===============\n");
+                try (DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()))) {
+                    dos.writeBoolean(true);
                 }
             }
-
-            System.out.println("Transferencia terminada.");
-            DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
-            dos.writeBoolean(true);
-
-            dos.close();
-            dis.close();
-            socket.close();
             servidor.close();
+
+            return true;
         }
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextArea console;
+    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JPanel jPanel1;
-    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JScrollPane jScrollPane1;
     private org.jdesktop.beansbinding.BindingGroup bindingGroup;
     // End of variables declaration//GEN-END:variables
 }

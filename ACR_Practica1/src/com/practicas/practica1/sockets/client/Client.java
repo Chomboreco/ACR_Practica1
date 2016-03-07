@@ -42,6 +42,7 @@ public class Client extends javax.swing.JFrame {
         jLabel1 = new javax.swing.JLabel();
         jScrollPane2 = new javax.swing.JScrollPane();
         console = new javax.swing.JTextArea();
+        jButton1 = new javax.swing.JButton();
         jMenuBar1 = new javax.swing.JMenuBar();
         jMenu1 = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
@@ -59,30 +60,41 @@ public class Client extends javax.swing.JFrame {
         org.jdesktop.beansbinding.Binding binding = org.jdesktop.beansbinding.Bindings.createAutoBinding(org.jdesktop.beansbinding.AutoBinding.UpdateStrategy.READ_WRITE, this, org.jdesktop.beansbinding.ELProperty.create("${defaultCloseOperation}"), this, org.jdesktop.beansbinding.BeanProperty.create("defaultCloseOperation"));
         bindingGroup.addBinding(binding);
 
-        jLabel1.setText("Console:");
+        jLabel1.setText("Consola:");
 
         console.setEditable(false);
         console.setColumns(20);
         console.setRows(5);
         jScrollPane2.setViewportView(console);
 
+        jButton1.setText("Examinar...");
+        jButton1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jButton1ActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
         jPanel1.setLayout(jPanel1Layout);
         jPanel1Layout.setHorizontalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+            .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
-                    .addComponent(jScrollPane2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, 776, Short.MAX_VALUE)
-                    .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
-                        .addComponent(jLabel1)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane2, javax.swing.GroupLayout.DEFAULT_SIZE, 776, Short.MAX_VALUE)
+                    .addGroup(jPanel1Layout.createSequentialGroup()
+                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel1)
+                            .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 110, javax.swing.GroupLayout.PREFERRED_SIZE))
                         .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addContainerGap(442, Short.MAX_VALUE)
+                .addContainerGap(395, Short.MAX_VALUE)
+                .addComponent(jButton1, javax.swing.GroupLayout.PREFERRED_SIZE, 40, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel1)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
@@ -91,7 +103,7 @@ public class Client extends javax.swing.JFrame {
 
         jMenu1.setText("Archivo");
 
-        jMenuItem1.setText("Enviar");
+        jMenuItem1.setText("Salir");
         jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 jMenuItem1ActionPerformed(evt);
@@ -120,10 +132,13 @@ public class Client extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
-        SocketWrapperClient swc = new SocketWrapperClient();
-
-        swc.enviar();
+        System.exit(0);
     }//GEN-LAST:event_jMenuItem1ActionPerformed
+
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        SocketWrapperClient swc = new SocketWrapperClient();
+        swc.enviar();
+    }//GEN-LAST:event_jButton1ActionPerformed
 
     /**
      * @param args the command line arguments
@@ -164,44 +179,62 @@ public class Client extends javax.swing.JFrame {
             chooser.showOpenDialog(jPanel1);
             File[] files = chooser.getSelectedFiles();
 
-            console.append("Enviando Archivos ---------------\n");
+            console.append("[INICIO] Enviando Archivos ===============\n");
             console.append("Total de archivos: " + files.length + "\n");
 
             Socket clientSocket;
             try {
-                clientSocket = new Socket("192.168.100.4", 8080);
+                // Configuración del Socket
+                clientSocket = new Socket("10.100.50.190", 8080);
                 clientSocket.setSoTimeout(3000);
                 clientSocket.setKeepAlive(true);
-                int i = 0;
 
                 try (DataOutputStream dos = new DataOutputStream(clientSocket.getOutputStream())) {
                     DataInputStream dis = new DataInputStream(clientSocket.getInputStream());
 
+                    // Envía la cantidad de archivos
                     dos.writeInt((int) files.length);
-                    //buffer for file writing, to declare inside or outside loop?
+
+                    // Control de buffer y carga
                     int n;
-                    byte[] buf = new byte[4092];
-                    //outer loop, executes one for each file
+                    int bufferSize = 4092;
+                    byte[] buf = new byte[bufferSize];
+                    int i = 1;
+                    double porcent;
+
+                    // Itera en el arreglo de archivos
                     for (File file : files) {
-                        //create new fileinputstream for each file
+                        // Crea el objeto de flujo de datos para enviarlos
                         FileInputStream fis = new FileInputStream(file);
+
+                        // Envia el nombre del archivo
                         dos.writeUTF(file.getName());
+                        console.append("Nombre: " + file.getName() + "\n");
+
+                        // Envia el peso/tamaño del archivo
                         dos.writeLong(file.length());
+                        console.append("Peso:   " + file.length() + "\n");
+
+                        // Forza los bytes
                         dos.flush();
-                        System.out.println("Enviando: " + file.getName());
-                        System.out.println("Peso:     " + file.length());
-                        //write file to dos
+
+                        // Escribe/envia el archivo actual utilizando el buffer
                         while ((n = fis.read(buf)) != -1) {
                             System.out.println("Vez " + i++);
                             dos.write(buf, 0, n);
                             dos.flush();
 
+                            // Porcentaje de la carga del archivo actual
+                            porcent = (i * bufferSize) * 100 / file.length();
+                            console.append("[Cargando] " + porcent + "%\n");
                         }
-                        //should i close the dataoutputstream here and make a new one each time?
+                        i = 1;
+                        porcent = 0;
                     }
-                    
-                    // Recibimos datos del server
-                    
+
+                    console.append("[FIN] Archivos Enviados ===============\n");
+
+                    // Recibimos datos del server para saber si se completó o no
                     boolean fin = dis.readBoolean();
 
                     if (fin) {
@@ -221,6 +254,7 @@ public class Client extends javax.swing.JFrame {
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JTextArea console;
+    private javax.swing.JButton jButton1;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JMenu jMenu1;
     private javax.swing.JMenuBar jMenuBar1;
