@@ -191,8 +191,6 @@ public class Server extends javax.swing.JFrame {
             ServerSocket servidor;
             servidor = new ServerSocket(8080);
 
-            System.out.println("[INICIO] Recepción de Archivos ===============");
-
             // Creamos el socket que atenderá el servidor
             try (Socket socket = servidor.accept(); DataInputStream dis = new DataInputStream(new BufferedInputStream(socket.getInputStream()))) {
 
@@ -223,11 +221,10 @@ public class Server extends javax.swing.JFrame {
                             fos.flush();
                         }
                     }
-
-                    console.append("\n");
                 }
 
                 console.append("[FIN] Recepción de Archivos ===============\n");
+                    console.append("[SERVIDOR DETENIDO] ===============\n");
                 try (DataOutputStream dos = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()))) {
                     dos.writeBoolean(true);
                 }
